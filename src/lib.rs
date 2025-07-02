@@ -1,5 +1,5 @@
-use redis::{Client, Commands, Connection};
 use anyhow::Result;
+use redis::{Client, Commands, Connection};
 
 pub struct CacheClient {
     connection: Connection,
