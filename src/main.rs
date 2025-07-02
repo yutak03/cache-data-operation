@@ -1,33 +1,6 @@
-use redis::{Client, Commands, Connection};
+use cache_data_operation::CacheClient;
 use std::io::{self, Write};
 use anyhow::Result;
-
-struct CacheClient {
-    connection: Connection,
-}
-
-impl CacheClient {
-    fn connect(url: &str) -> Result<Self> {
-        let client = Client::open(url)?;
-        let connection = client.get_connection()?;
-        Ok(CacheClient { connection })
-    }
-
-    fn get(&mut self, key: &str) -> Result<Option<String>> {
-        let value: Option<String> = self.connection.get(key)?;
-        Ok(value)
-    }
-
-    fn set(&mut self, key: &str, value: &str) -> Result<()> {
-        let _: () = self.connection.set(key, value)?;
-        Ok(())
-    }
-
-    fn search_keys(&mut self, pattern: &str) -> Result<Vec<String>> {
-        let keys: Vec<String> = self.connection.keys(format!("*{}*", pattern))?;
-        Ok(keys)
-    }
-}
 
 fn main() -> Result<()> {
     println!("Cache Data Operation Tool");
@@ -105,9 +78,27 @@ fn main() -> Result<()> {
                 io::stdin().read_line(&mut value)?;
                 let value = value.trim();
                 
-                match client.set(key, value) {
-                    Ok(()) => println!("Successfully set '{}' = '{}'", key, value),
-                    Err(e) => println!("Error setting value: {}", e),
+                print!("Enter TTL in seconds (press Enter for no expiration): ");
+                io::stdout().flush()?;
+                let mut ttl_input = String::new();
+                io::stdin().read_line(&mut ttl_input)?;
+                let ttl_input = ttl_input.trim();
+                
+                if ttl_input.is_empty() {
+                    match client.set(key, value) {
+                        Ok(()) => println!("Successfully set '{}' = '{}'", key, value),
+                        Err(e) => println!("Error setting value: {}", e),
+                    }
+                } else {
+                    match ttl_input.parse::<u64>() {
+                        Ok(ttl_seconds) => {
+                            match client.set_with_ttl(key, value, ttl_seconds) {
+                                Ok(()) => println!("Successfully set '{}' = '{}' with TTL of {} seconds", key, value, ttl_seconds),
+                                Err(e) => println!("Error setting value with TTL: {}", e),
+                            }
+                        }
+                        Err(_) => println!("Invalid TTL value. Please enter a valid number."),
+                    }
                 }
             }
             "4" => {
