@@ -1,6 +1,6 @@
 # Cache Data Operation Tool
 
-Redis/Valkeyキャッシュサーバのデータ操作（CRUD）を簡単に行うためのCLIツールです。
+Redis/Valkeyキャッシュサーバのデータ操作（CRUD）を簡単に行うための簡易CLIツールです。
 
 ## 機能
 
