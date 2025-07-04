@@ -1,5 +1,5 @@
 use anyhow::Result;
-use cache_data_operation::CacheClient;
+use cdot::CacheClient;
 
 #[test]
 #[ignore = "requires redis instance"]

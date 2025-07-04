@@ -1,118 +1,197 @@
-# Cache Data Operation Tool
+# CDOT - Cache Data Operation Tool
 
-Redis/Valkeyキャッシュサーバのデータ操作（CRUD）を簡単に行うための簡易CLIツールです。
+A simple interactive CLI tool for managing Redis/Valkey cache data through a menu-based interface.
 
-## 機能
+## Features
 
-- ✅ CLIインタラクティブメニュー
-- ✅ キー名による検索（部分一致）
-- ✅ キー・バリューの取得/設定
-- ✅ Redis/Valkey対応
+- ✅ Interactive CLI menu
+- ✅ Key search with pattern matching
+- ✅ Get/Set key-value operations
+- ✅ Key deletion
+- ✅ TTL (Time To Live) support
+- ✅ Redis and Valkey compatible
 
-## 必要環境
+## Requirements
 
-- Rust 1.70以上
-- Redis または Valkey サーバー
+- Rust 1.70 or higher
+- Redis or Valkey server
 
-## インストール・実行
+## Installation
+
+### From source
 
 ```bash
-# リポジトリをクローン
+# Clone the repository
 git clone <repository-url>
 cd cache-data-operation
 
-# 依存関係のインストールとビルド
-cargo build
-
-# 実行
-cargo run
+# Install using cargo
+cargo install --path .
 ```
 
-## 使い方
+### From crates.io (when published)
 
-### 1. サーバー接続
+```bash
+cargo install cdot
+```
 
-実行すると、まず接続先URLの入力を求められます：
+## Usage
+
+### Running the Tool
+
+```bash
+# Run the application
+cargo run
+
+# Or install and run globally
+cargo install --path .
+cdot
+```
+
+The tool starts in interactive mode and connects to Redis at `redis://127.0.0.1/` by default.
+
+## Interactive Mode
+
+When running in interactive mode, you'll see a menu like this:
 
 ```
 Cache Data Operation Tool
 =========================
-Redis/Valkey URL (default: redis://127.0.0.1/): 
-```
+Connecting to redis://127.0.0.1/...
+Connected successfully!
 
-- Enterのみ: デフォルトの `redis://127.0.0.1/` に接続
-- カスタムURL: `redis://localhost:6379/1` など任意のURLを入力
-
-### 2. メニュー操作
-
-接続が成功すると、以下のメニューが表示されます：
-
-```
 --- Menu ---
 1. Search keys
 2. Get value by key
 3. Set key-value
-4. Exit
+4. Delete key
+5. Exit
 Select option: 
 ```
 
-### 3. 各機能の使い方
+### Menu Options
 
-#### キー検索（1番）
-キー名の一部を入力して、該当するキーを検索します。
+1. **Search keys**: Find keys matching a pattern
+2. **Get value by key**: Retrieve the value for a specific key
+3. **Set key-value**: Create or update a key-value pair with optional TTL
+4. **Delete key**: Remove a key from the cache
+5. **Exit**: Quit the application
+
+## Configuration
+
+### Redis/Valkey URL Format
+
+The tool supports standard Redis URL formats:
+
+- `redis://127.0.0.1/` - Default local Redis
+- `redis://127.0.0.1:6379/` - Explicit port
+- `redis://127.0.0.1:6379/1` - Specific database
+- `redis://:password@127.0.0.1:6379/` - With authentication
+- `redis://user:password@127.0.0.1:6379/` - With username and password
+
+### Pattern Matching
+
+The search functionality uses Redis KEYS command with patterns:
+- `*` - Match any number of characters
+- `?` - Match single character
+- `[abc]` - Match any character in brackets
+- `[^abc]` - Match any character not in brackets
+
+Examples:
+- `user:*` - All keys starting with "user:"
+- `*:config` - All keys ending with ":config"
+- `user:?` - Keys like "user:1", "user:a", etc.
+
+## Technical Details
+
+### Dependencies
+
+- `redis`: Redis/Valkey client library
+- `tokio`: Async runtime (for Redis client)
+- `anyhow`: Error handling
+- `clap`: Command-line argument parsing
+
+### Data Types
+
+The tool works with Redis string data types and can handle:
+- Plain text strings
+- JSON strings
+- Serialized data as strings
+- Binary data (displayed as UTF-8 if possible)
+
+### Error Handling
+
+The tool provides clear error messages for common scenarios:
+- Connection failures
+- Invalid Redis URLs
+- Key not found
+- Permission denied
+- Network timeouts
+
+## Development
+
+### Building
+
+```bash
+# Development build
+cargo build
+
+# Release build
+cargo build --release
+
+# Check without building
+cargo check
+```
+
+### Code Quality
+
+```bash
+# Format code
+cargo fmt
+
+# Run linter
+cargo clippy
+
+# Run tests
+cargo test
+```
+
+### Project Structure
 
 ```
-Select option: 1
-Enter search pattern: user
-Found 3 keys:
-  - user:123
-  - user:456  
-  - user_settings
+src/
+└── main.rs          # Complete application in single file
 ```
 
-#### 値の取得（2番）
-指定したキーの値を取得します。
-
-```
-Select option: 2
-Enter key name: user:123
-Value: {"name": "John", "age": 30}
-```
-
-#### 値の設定（3番）
-新しいキー・バリューのペアを設定します。
-
-```
-Select option: 3
-Enter key name: user:789
-Enter value: {"name": "Alice", "age": 25}
-Successfully set 'user:789' = '{"name": "Alice", "age": 25}'
-```
-
-#### 終了（4番）
-アプリケーションを終了します。
-
-## 技術仕様
-
-### 使用ライブラリ
-
-- `redis`: Redis/Valkey接続
-- `tokio`: 非同期ランタイム
-- `anyhow`: エラーハンドリング
-- `clap`: CLI引数解析（将来の拡張用）
-
-### 対応データ型
-
-- 文字列（String）
-- JSON文字列
-- その他のRedis文字列型データ
-
-### 検索仕様
-
-- パターン検索: `*{入力文字列}*` 形式のワイルドカード検索
-- 大文字小文字区別あり
-- 部分一致対応
-
-## ライセンス
+## License
 
 MIT License
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Troubleshooting
+
+### Common Issues
+
+**Connection refused**
+- Make sure Redis/Valkey server is running
+- Check the URL format and port
+- Verify firewall settings
+
+**Authentication failed**
+- Ensure correct username/password in URL
+- Check Redis AUTH configuration
+
+**Command not found after installation**
+- Make sure `~/.cargo/bin` is in your PATH
+- Try `source ~/.bashrc` or restart terminal
+
+**Permission denied**
+- Check Redis ACL settings
+- Verify user permissions for the database

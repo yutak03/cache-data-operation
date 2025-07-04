@@ -1,26 +1,35 @@
 use anyhow::Result;
-use cache_data_operation::CacheClient;
+use cdot::CacheClient;
 use std::io::{self, Write};
 
 fn main() -> Result<()> {
-    println!("Cache Data Operation Tool");
-    println!("=========================");
-
-    print!("Redis/Valkey URL (default: redis://127.0.0.1/): ");
+    // Interactive URL input
+    print!("Enter Redis URL (default: redis://127.0.0.1/): ");
     io::stdout().flush()?;
-
-    let mut url = String::new();
-    io::stdin().read_line(&mut url)?;
-    let url = url.trim();
-    let url = if url.is_empty() {
+    
+    let mut url_input = String::new();
+    io::stdin().read_line(&mut url_input)?;
+    let url = url_input.trim();
+    
+    let redis_url = if url.is_empty() {
         "redis://127.0.0.1/"
     } else {
         url
     };
 
-    println!("Connecting to {}...", url);
-    let mut client = CacheClient::connect(url)?;
+    println!("Connecting to {}...", redis_url);
+    let mut client = CacheClient::connect(redis_url)?;
     println!("Connected successfully!");
+
+    run_interactive_mode(&mut client)?;
+
+    Ok(())
+}
+
+
+fn run_interactive_mode(client: &mut CacheClient) -> Result<()> {
+    println!("Cache Data Operation Tool");
+    println!("=========================");
 
     loop {
         println!("\n--- Menu ---");
